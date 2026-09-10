@@ -1,0 +1,202 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #141414;
+    color: white;
+}
+
+.container {
+    width: 500px;
+    max-width: 90%;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #181818;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    color: #E50914;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: white;
+}
+
+textarea {
+    width: 100%;
+    height: 150px;
+    padding: 12px;
+    background-color: #222;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    resize: vertical;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #E50914;
+}
+
+.text-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    color: #aaaaaa;
+    font-size: 14px;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background-color: #222;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    font-size: 15px;
+    outline: none;
+}
+
+select:focus {
+    border-color: #E50914;
+}
+
+#generateButton {
+    width: 100%;
+    padding: 12px;
+    background-color: #E50914;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#generateButton:hover {
+    background-color: #b20710;
+}
+
+#generateButton:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.audio-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #333;
+}
+
+.audio-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+#audioPlayer {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+#downloadButton {
+    width: 100%;
+    padding: 12px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#downloadButton:hover {
+    background-color: #444;
+}
+
+#downloadButton:disabled {
+    background-color: #222;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.history-section {
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid #333;
+}
+
+.history-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+#historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.history-card {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.history-card p {
+    margin: 0 0 12px 0;
+    color: white;
+    font-size: 15px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.history-card span {
+    display: block;
+    color: #E50914;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.history-card small {
+    display: block;
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.history-card audio {
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+
+    .container {
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    textarea {
+        height: 130px;
+    }
+}

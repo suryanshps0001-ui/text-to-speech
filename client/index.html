@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text To Speech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Text To Speech</h1>
+
+        <label for="textInput">Enter your text</label>
+
+        <textarea
+            id="textInput"
+            placeholder="Type or paste your text here..."
+        ></textarea>
+
+        <div class="text-info">
+
+            <span>
+                Characters:
+                <span id="characterCount">0</span>
+            </span>
+
+            <span>
+                Words:
+                <span id="wordCount">0</span>
+            </span>
+
+        </div>
+
+        <label for="language">Language</label>
+
+        <select id="language">
+            <option value="en-US">English</option>
+            <option value="hi-IN">Hindi</option>
+        </select>
+
+        <label for="voice">Voice</label>
+
+        <select id="voice">
+            <option value="">Loading voices...</option>
+        </select>
+
+        <button type="button" id="generateButton">
+            Generate Speech
+        </button>
+
+        <div class="audio-section">
+
+            <h2>Generated Audio</h2>
+
+            <audio id="audioPlayer" controls></audio>
+
+            <button
+                type="button"
+                id="downloadButton"
+                disabled
+            >
+                Download Audio
+            </button>
+
+        </div>
+
+    </div>
+
+    <script src="./script.js"></script>
+
+</body>
+
+</html>
+
