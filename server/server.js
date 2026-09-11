@@ -13,6 +13,8 @@ const SpeechHistory = require("./models/SpeechHistory");
 
 const app = express();
 
+const PORT = process.env.PORT || 5000;
+
 const ttsLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 10,
@@ -95,18 +97,16 @@ function splitText(text) {
 
 function runFFmpeg(inputFiles, outputFile) {
     return new Promise((resolve, reject) => {
-        const listFile =
-            path.join(
-                audioFolder,
-                `concat-${Date.now()}.txt`
-            );
+        const listFile = path.join(
+            audioFolder,
+            `concat-${Date.now()}.txt`
+        );
 
-        const content =
-            inputFiles
-                .map(function (file) {
-                    return `file '${file.replace(/\\/g, "/")}'`;
-                })
-                .join("\n");
+        const content = inputFiles
+            .map(function (file) {
+                return `file '${file.replace(/\\/g, "/")}'`;
+            })
+            .join("\n");
 
         fs.writeFileSync(
             listFile,
@@ -133,14 +133,8 @@ function runFFmpeg(inputFiles, outputFile) {
                 }
 
                 if (error) {
-                    console.log(
-                        "FFmpeg Error:"
-                    );
-
-                    console.log(
-                        stderr
-                    );
-
+                    console.log("FFmpeg Error:");
+                    console.log(stderr);
                     reject(error);
                     return;
                 }
@@ -151,17 +145,13 @@ function runFFmpeg(inputFiles, outputFile) {
     });
 }
 
-async function generateElevenLabsAudio(
-    text,
-    voice
-) {
+async function generateElevenLabsAudio(text, voice) {
     const audio =
         await client.textToSpeech.convert(
             voice,
             {
                 text: text,
-                modelId:
-                    "eleven_multilingual_v2"
+                modelId: "eleven_multilingual_v2"
             }
         );
 
@@ -184,27 +174,23 @@ app.get("/api/health", function (req, res) {
 app.get("/api/test-route", function (req, res) {
     res.json({
         success: true,
-        message:
-            "TTS route system is working"
+        message: "TTS route system is working"
     });
 });
 
 app.get("/api/voices", async function (req, res) {
     try {
-        const response =
-            await fetch(
-                "https://api.elevenlabs.io/v1/voices",
-                {
-                    headers: {
-                        "xi-api-key":
-                            process.env
-                                .ELEVENLABS_API_KEY
-                    }
+        const response = await fetch(
+            "https://api.elevenlabs.io/v1/voices",
+            {
+                headers: {
+                    "xi-api-key":
+                        process.env.ELEVENLABS_API_KEY
                 }
-            );
+            }
+        );
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
             return res.status(
@@ -222,18 +208,12 @@ app.get("/api/voices", async function (req, res) {
             voices: data.voices
         });
     } catch (error) {
-        console.log(
-            "Voice Error:"
-        );
-
-        console.log(
-            error.message
-        );
+        console.log("Voice Error:");
+        console.log(error.message);
 
         res.status(500).json({
             success: false,
-            message:
-                error.message
+            message: error.message
         });
     }
 });
@@ -252,13 +232,8 @@ app.get("/api/history", async function (req, res) {
             history: history
         });
     } catch (error) {
-        console.log(
-            "History Error:"
-        );
-
-        console.log(
-            error.message
-        );
+        console.log("History Error:");
+        console.log(error.message);
 
         res.status(500).json({
             success: false,
@@ -268,248 +243,243 @@ app.get("/api/history", async function (req, res) {
     }
 });
 
-app.post("/api/tts", ttsLimiter, async function (req, res) {
-    try {
-        const {
-            text,
-            language,
-            voice
-        } = req.body;
+app.post(
+    "/api/tts",
+    ttsLimiter,
+    async function (req, res) {
+        try {
+            const {
+                text,
+                language,
+                voice
+            } = req.body;
 
-        console.log(
-            "TTS request received"
-        );
+            console.log("TTS request received");
+            console.log("Text:", text);
+            console.log("Language:", language);
+            console.log("Voice:", voice);
 
-        console.log(
-            "Text:",
-            text
-        );
+            if (
+                !text ||
+                text.trim() === ""
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter some text."
+                });
+            }
 
-        console.log(
-            "Language:",
-            language
-        );
+            if (text.length > 1500) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Text cannot be more than 1500 characters."
+                });
+            }
 
-        console.log(
-            "Voice:",
-            voice
-        );
+            if (!voice) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please select a voice."
+                });
+            }
 
-        if (
-            !text ||
-            text.trim() === ""
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Please enter some text."
-            });
-        }
+            if (
+                !supportedLanguages.includes(
+                    language
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Unsupported language selected."
+                });
+            }
 
-        if (text.length > 1500) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Text cannot be more than 1500 characters."
-            });
-        }
+            const beepPath =
+                path.join(
+                    audioFolder,
+                    "beep.mp3"
+                );
 
-        if (!voice) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Please select a voice."
-            });
-        }
+            if (!fs.existsSync(beepPath)) {
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "beep.mp3 file not found."
+                });
+            }
 
-        if (!supportedLanguages.includes(language)) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Unsupported language selected."
-            });
-        }
+            const parts = splitText(text);
 
-        const beepPath =
-            path.join(
-                audioFolder,
-                "beep.mp3"
+            console.log(
+                "Text parts:",
+                parts
             );
 
-        if (!fs.existsSync(beepPath)) {
-            return res.status(500).json({
-                success: false,
-                message:
-                    "beep.mp3 file not found."
-            });
-        }
+            const inputFiles = [];
 
-        const parts =
-            splitText(text);
-
-        console.log(
-            "Text parts:",
-            parts
-        );
-
-        const inputFiles = [];
-
-        for (
-            let i = 0;
-            i < parts.length;
-            i++
-        ) {
-            const part =
-                parts[i];
-
-            if (
-                part.type === "beep"
+            for (
+                let i = 0;
+                i < parts.length;
+                i++
             ) {
-                inputFiles.push(
-                    beepPath
-                );
+                const part = parts[i];
 
-                console.log(
-                    "Electronic beep inserted"
-                );
-
-                continue;
-            }
-
-            if (
-                part.type === "speech" &&
-                part.text.trim() !== ""
-            ) {
-                const segmentBuffer =
-                    await generateElevenLabsAudio(
-                        part.text,
-                        voice
+                if (
+                    part.type === "beep"
+                ) {
+                    inputFiles.push(
+                        beepPath
                     );
 
-                const segmentName =
-                    `segment-${Date.now()}-${i}.mp3`;
+                    console.log(
+                        "Electronic beep inserted"
+                    );
 
-                const segmentPath =
-                    path.join(
-                        audioFolder,
+                    continue;
+                }
+
+                if (
+                    part.type === "speech" &&
+                    part.text.trim() !== ""
+                ) {
+                    const segmentBuffer =
+                        await generateElevenLabsAudio(
+                            part.text,
+                            voice
+                        );
+
+                    const segmentName =
+                        `segment-${Date.now()}-${i}.mp3`;
+
+                    const segmentPath =
+                        path.join(
+                            audioFolder,
+                            segmentName
+                        );
+
+                    fs.writeFileSync(
+                        segmentPath,
+                        segmentBuffer
+                    );
+
+                    inputFiles.push(
+                        segmentPath
+                    );
+
+                    console.log(
+                        "Speech segment saved:",
                         segmentName
                     );
-
-                fs.writeFileSync(
-                    segmentPath,
-                    segmentBuffer
-                );
-
-                inputFiles.push(
-                    segmentPath
-                );
-
-                console.log(
-                    "Speech segment saved:",
-                    segmentName
-                );
+                }
             }
-        }
 
-        const finalFileName =
-            `speech-${Date.now()}.mp3`;
+            const finalFileName =
+                `speech-${Date.now()}.mp3`;
 
-        const finalAudioPath =
-            path.join(
-                audioFolder,
+            const finalAudioPath =
+                path.join(
+                    audioFolder,
+                    finalFileName
+                );
+
+            await runFFmpeg(
+                inputFiles,
+                finalAudioPath
+            );
+
+            for (
+                let i = 0;
+                i < inputFiles.length;
+                i++
+            ) {
+                const file =
+                    inputFiles[i];
+
+                if (
+                    file !== beepPath &&
+                    fs.existsSync(file)
+                ) {
+                    fs.unlinkSync(file);
+                }
+            }
+
+            console.log(
+                "Final audio created:",
                 finalFileName
             );
 
-        await runFFmpeg(
-            inputFiles,
-            finalAudioPath
-        );
+            const audioUrl =
+                `/audio/${finalFileName}`;
 
-        for (
-            let i = 0;
-            i < inputFiles.length;
-            i++
-        ) {
-            const file =
-                inputFiles[i];
+            const speech =
+                new SpeechHistory({
+                    text: text,
+                    language:
+                        language || "en-US",
+                    voice: voice,
+                    audioUrl: audioUrl
+                });
 
-            if (
-                file !== beepPath &&
-                fs.existsSync(file)
-            ) {
-                fs.unlinkSync(file);
-            }
-        }
+            await speech.save();
 
-        console.log(
-            "Final audio created:",
-            finalFileName
-        );
+            console.log(
+                "History saved to MongoDB"
+            );
 
-        const audioUrl =
-            `/audio/${finalFileName}`;
-
-        const speech =
-            new SpeechHistory({
-                text: text,
-                language:
-                    language || "en-US",
-                voice: voice,
+            res.json({
+                success: true,
+                message:
+                    "Speech generated successfully",
                 audioUrl: audioUrl
             });
 
-        await speech.save();
+        } catch (error) {
+            console.log("TTS Error:");
+            console.log(error.message);
 
-        console.log(
-            "History saved to MongoDB"
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+);
+
+async function startServer() {
+    try {
+        await mongoose.connect(
+            process.env.MONGODB_URI
         );
 
-        res.json({
-            success: true,
-            message:
-                "Speech generated successfully",
-            audioUrl: audioUrl
-        });
+        console.log(
+            "MongoDB connected"
+        );
+
+        app.listen(
+            PORT,
+            "0.0.0.0",
+            function () {
+                console.log(
+                    `Server running on port ${PORT}`
+                );
+            }
+        );
+
     } catch (error) {
         console.log(
-            "TTS Error:"
+            "MongoDB connection failed"
         );
 
         console.log(
             error.message
         );
 
-        res.status(500).json({
-            success: false,
-            message:
-                error.message
-        });
+        process.exit(1);
     }
-});
+}
 
-mongoose.connect(
-    process.env.MONGODB_URI
-)
-.then(function () {
-    console.log(
-        "MongoDB connected"
-    );
-
-    app.listen(
-        process.env.PORT || 5000,
-        function () {
-            console.log(
-                `Server running on http://127.0.0.1:${process.env.PORT || 5000}`
-            );
-        }
-    );
-})
-.catch(function (error) {
-    console.log(
-        "MongoDB connection failed"
-    );
-
-    console.log(
-        error.message
-    );
-});
+startServer();
