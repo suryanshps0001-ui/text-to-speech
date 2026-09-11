@@ -1,47 +1,49 @@
- # Text-to-Speech Application
+# Text to Speech
 
-A web-based Text-to-Speech application that converts written text into speech.
+This is a Text to Speech web application made during my web development internship.
 
-Users can enter text, select a language and voice, generate speech, play the audio, download the generated MP3 file, and view speech history.
+The main purpose of this project is to convert written text into speech. The user can enter text, select a language and voice, and generate an audio file.
 
 ## Features
 
-* Text-to-Speech conversion
+* Convert text into speech
 * English and Hindi language support
-* Voice selection
+* Select different voices
+* Generate audio
+* Play generated audio
+* Download audio
 * Character count
 * Word count
-* 1500 character limit
-* Audio player
-* MP3 download
-* Speech history
-* MongoDB database
-* Abusive word detection
-* Electronic censor beep
-* Backend validation
-* Rate limiting
-* Error handling
-* Responsive dark-themed interface
+* Maximum 1500 characters
+* Empty text validation
+* Voice validation
+* Abusive word censor with beep sound
+* Speech history using MongoDB
+* Basic API rate limiting
 
 ## Technologies Used
 
-Frontend:
+### Frontend
 
 * HTML
 * CSS
 * JavaScript
 
-Backend:
+### Backend
 
 * Node.js
 * Express.js
 
-Services:
+### Database
 
-* ElevenLabs Text-to-Speech API
-* MongoDB Atlas
+* MongoDB
+* Mongoose
 
-Other:
+### API
+
+* ElevenLabs Text to Speech API
+
+### Other
 
 * FFmpeg
 * Git
@@ -49,111 +51,161 @@ Other:
 
 ## How It Works
 
-1. User enters text.
-2. User selects a language.
-3. User selects a voice.
-4. Frontend sends the request to the backend.
-5. Backend validates the request.
-6. Backend checks for abusive words.
-7. ElevenLabs generates the speech.
-8. FFmpeg processes the audio.
-9. The final audio is returned to the frontend.
-10. User can play or download the audio.
-11. Speech information is stored in MongoDB.
+The user enters some text and selects a language and voice.
+
+The frontend sends the text and voice information to the backend.
+
+The backend validates the request and sends the required text to ElevenLabs.
+
+After getting the audio, the backend sends it back to the frontend.
+
+If an abusive word is found, the word is replaced with an electronic beep sound.
+
+The generated speech information is also stored in MongoDB.
+
+## Project Structure
+
+```text
+text-to-speech/
+│
+├── client/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+├── server/
+│   ├── models/
+│   │   └── SpeechHistory.js
+│   ├── audio/
+│   ├── .env
+│   ├── package.json
+│   ├── package-lock.json
+│   └── server.js
+│
+├── .gitignore
+└── README.md
+```
 
 ## API Endpoints
 
-GET /api/health
-
-Checks whether the backend server is running.
-
-GET /api/voices
-
-Returns available voices.
-
-GET /api/history
-
-Returns speech history.
-
-POST /api/tts
-
-Generates speech from the submitted text.
-
-## Security
-
-* API keys are stored in environment variables.
-* API keys are not exposed in frontend JavaScript.
-* The .env file is excluded from GitHub.
-* The node_modules folder is excluded from GitHub.
-* Backend validation is used for incoming requests.
-* Rate limiting is applied to the Text-to-Speech endpoint.
+| Method | Endpoint          | Work                 |
+| ------ | ----------------- | -------------------- |
+| GET    | `/api/health`     | Check server         |
+| GET    | `/api/voices`     | Get available voices |
+| POST   | `/api/tts`        | Generate speech      |
+| GET    | `/api/history`    | Get speech history   |
+| GET    | `/api/test-route` | Test TTS route       |
 
 ## Environment Variables
 
-Create a .env file inside the server folder.
+The backend uses environment variables for the API key and MongoDB connection.
 
-Use your own credentials:
+Example:
 
+```env
 ELEVENLABS_API_KEY=your_api_key
 MONGODB_URI=your_mongodb_connection_string
-PORT=5000
+```
 
-Never upload real API keys or database credentials to GitHub.
+The `.env` file is not uploaded to GitHub.
 
-## Installation
+`node_modules` is also ignored using `.gitignore`.
 
-Clone the repository.
+## Running the Project
 
-Open the project folder in VS Code.
+First, open the server folder:
 
-Open the terminal and run:
-
+```bash
 cd server
+```
 
+Install the packages:
+
+```bash
 npm install
+```
 
-Create the .env file inside the server folder and add your credentials.
+Create the `.env` file and add the required values.
 
-Start the server:
+Then start the server:
 
+```bash
 node server.js
+```
 
-Open the application:
+The server will run on:
 
-http://127.0.0.1:5000/
+```text
+http://127.0.0.1:5000
+```
+
+Open this address in the browser to use the application.
 
 ## Testing
 
-The application has been tested for:
+I tested the project for:
 
-* Text-to-Speech generation
 * English speech
 * Hindi speech
 * Voice selection
+* Audio generation
 * Audio playback
-* MP3 download
-* Character count
-* Word count
-* Empty text validation
-* Voice validation
-* Abusive word censor beep
-* Speech history
-* MongoDB connection
-* Backend API routes
-* Rate limiting
+* Audio download
+* Empty text
+* Character limit
+* Abusive word censor
+* MongoDB speech history
+* Backend APIs
+
+## Censor Feature
+
+One feature I added separately is an abusive word censor.
+
+For example, if an abusive word is present in the text, it is not sent directly for speech. The backend separates the text and adds an electronic beep in place of the abusive word.
+
+FFmpeg is used to combine the speech parts and beep sound.
+
+## Database
+
+MongoDB is used to store speech history.
+
+The stored information includes:
+
+* Text
+* Language
+* Voice
+* Audio URL
+* Created date
+
+## Security
+
+The ElevenLabs API key is kept in the backend `.env` file.
+
+It is not written inside the frontend JavaScript.
+
+The backend also checks the input and has rate limiting on the TTS endpoint.
 
 ## Future Improvements
 
-* More language support
-* More voice controls
+Some things I can add later:
+
+* More languages
+* More voice options
 * Speech speed control
-* Pitch control
-* Favorites
-* Cloud deployment
-* Improved speech history management
+* User login
+* Better speech history UI
+* Deployment
+* More audio controls
 
 ## Author
 
-Suryansh Singh
+**Suryansh Singh**
 
 BCA Student
+Web Development Intern
+
+GitHub: `suryanshps0001-ui`
+
+## Project Status
+
+The main features of the project are completed and working.
