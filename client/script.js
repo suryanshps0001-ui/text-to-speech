@@ -1,5 +1,8 @@
-
-const API_URL = "http://127.0.0.1:5000";
+const API_URL =
+window.location.hostname === "127.0.0.1" ||
+window.location.hostname === "localhost"
+? "http://127.0.0.1:5000"
+: "";
 
 const textInput = document.getElementById("textInput");
 const characterCount = document.getElementById("characterCount");
@@ -12,217 +15,381 @@ const generateButton = document.getElementById("generateButton");
 const audioPlayer = document.getElementById("audioPlayer");
 const downloadButton = document.getElementById("downloadButton");
 
-const maxCharacters = 1500;
+const historyList = document.getElementById("historyList");
 
+const maxCharacters = 1500;
 
 textInput.addEventListener("input", function () {
 
-    if (textInput.value.length > maxCharacters) {
-        textInput.value =
-            textInput.value.substring(0, maxCharacters);
-    }
 
-    const text = textInput.value;
+if (textInput.value.length > maxCharacters) {
+    textInput.value =
+        textInput.value.substring(0, maxCharacters);
+}
 
-    characterCount.textContent = text.length;
+const text = textInput.value;
 
-    if (text.trim() === "") {
-        wordCount.textContent = 0;
-    } else {
-        wordCount.textContent =
-            text.trim().split(/\s+/).length;
-    }
-});
+characterCount.textContent = text.length;
 
-
-async function loadVoices() {
-
-    try {
-
-        const response = await fetch(
-            API_URL + "/api/voices"
-        );
-
-        const data = await response.json();
-
-        console.log("Voices:", data);
-
-        voice.innerHTML = "";
-
-        if (!data.success) {
-
-            const option =
-                document.createElement("option");
-
-            option.value = "";
-            option.textContent = "No voices found";
-
-            voice.appendChild(option);
-
-            return;
-        }
-
-        const defaultOption =
-            document.createElement("option");
-
-        defaultOption.value = "";
-        defaultOption.textContent = "Select Voice";
-
-        voice.appendChild(defaultOption);
-
-        data.voices.forEach(function (item) {
-
-            const option =
-                document.createElement("option");
-
-            option.value = item.voice_id;
-            option.textContent = item.name;
-
-            voice.appendChild(option);
-        });
-
-    } catch (error) {
-
-        console.log("Voice error:", error);
-
-        voice.innerHTML =
-            '<option value="">Failed to load voices</option>';
-    }
+if (text.trim() === "") {
+    wordCount.textContent = 0;
+} else {
+    wordCount.textContent =
+        text.trim().split(/\s+/).length;
 }
 
 
+});
+
+async function loadVoices() {
+
+
+try {
+
+    const response = await fetch(
+        API_URL + "/api/voices"
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Voice API returned " + response.status
+        );
+    }
+
+    const data = await response.json();
+
+    console.log("Voices:", data);
+
+    voice.innerHTML = "";
+
+    if (!data.success || !Array.isArray(data.voices)) {
+
+        const option =
+            document.createElement("option");
+
+        option.value = "";
+        option.textContent = "No voices found";
+
+        voice.appendChild(option);
+
+        return;
+    }
+
+    const defaultOption =
+        document.createElement("option");
+
+    defaultOption.value = "";
+    defaultOption.textContent = "Select Voice";
+
+    voice.appendChild(defaultOption);
+
+    data.voices.forEach(function (item) {
+
+        const option =
+            document.createElement("option");
+
+        option.value = item.voice_id;
+        option.textContent = item.name;
+
+        voice.appendChild(option);
+    });
+
+} catch (error) {
+
+    console.log("Voice error:", error);
+
+    voice.innerHTML =
+        '<option value="">Failed to load voices</option>';
+}
+
+
+}
+
+async function loadHistory() {
+
+
+try {
+
+    const response = await fetch(
+        API_URL + "/api/history"
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "History API returned " + response.status
+        );
+    }
+
+    const data = await response.json();
+
+    console.log("History:", data);
+
+    historyList.innerHTML = "";
+
+    if (
+        !data.success ||
+        !Array.isArray(data.history) ||
+        data.history.length === 0
+    ) {
+
+        historyList.textContent =
+            "No speech history yet.";
+
+        return;
+    }
+
+    data.history.forEach(function (item) {
+
+        const historyCard =
+            document.createElement("div");
+
+        historyCard.className =
+            "history-card";
+
+
+        const text =
+            document.createElement("p");
+
+        text.textContent =
+            item.text;
+
+
+        const languageText =
+            document.createElement("span");
+
+        languageText.textContent =
+            item.language;
+
+
+        const date =
+            document.createElement("small");
+
+        date.textContent =
+            new Date(item.createdAt)
+                .toLocaleString();
+
+
+        const audio =
+            document.createElement("audio");
+
+        audio.controls = true;
+
+        audio.src =
+            API_URL + item.audioUrl;
+
+
+        historyCard.appendChild(text);
+        historyCard.appendChild(languageText);
+        historyCard.appendChild(date);
+        historyCard.appendChild(audio);
+
+        historyList.appendChild(historyCard);
+    });
+
+} catch (error) {
+
+    console.log("History error:", error);
+
+    historyList.textContent =
+        "Failed to load speech history.";
+}
+
+
+}
+
 async function generateSpeech(event) {
 
-    event.preventDefault();
 
-    console.log("GENERATE CLICKED");
+event.preventDefault();
 
-    const text = textInput.value.trim();
+console.log("GENERATE CLICKED");
 
-    console.log("Selected voice:", voice.value);
+const text =
+    textInput.value.trim();
 
-    if (text === "") {
+console.log(
+    "Selected voice:",
+    voice.value
+);
 
-        alert("Please enter some text.");
 
-        return;
-    }
+if (text === "") {
 
-    if (text.length > maxCharacters) {
+    alert(
+        "Please enter some text."
+    );
 
-        alert("Text cannot be more than 1500 characters.");
+    return;
+}
 
-        return;
-    }
 
-    if (voice.value === "") {
+if (text.length > maxCharacters) {
 
-        alert("Please select a voice.");
+    alert(
+        "Text cannot be more than 1500 characters."
+    );
 
-        return;
-    }
+    return;
+}
 
-    generateButton.disabled = true;
-    generateButton.textContent = "Generating...";
 
-    try {
+if (voice.value === "") {
 
-        console.log("Sending TTS request...");
+    alert(
+        "Please select a voice."
+    );
 
-        const response = await fetch(
+    return;
+}
+
+
+generateButton.disabled =
+    true;
+
+generateButton.textContent =
+    "Generating...";
+
+
+try {
+
+    console.log(
+        "Sending TTS request..."
+    );
+
+
+    const response =
+        await fetch(
             API_URL + "/api/tts",
             {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
 
                 body: JSON.stringify({
                     text: text,
-                    language: language.value,
-                    voice: voice.value
+                    language:
+                        language.value,
+                    voice:
+                        voice.value
                 })
             }
         );
 
-        console.log(
-            "TTS response status:",
-            response.status
+
+    console.log(
+        "TTS response status:",
+        response.status
+    );
+
+
+    const data =
+        await response.json();
+
+
+    console.log(
+        "TTS:",
+        data
+    );
+
+
+    if (
+        !response.ok ||
+        !data.success
+    ) {
+
+        alert(
+            data.message ||
+            "Speech generation failed."
         );
 
-        const data = await response.json();
+        return;
+    }
 
-        console.log("TTS:", data);
 
-        if (!response.ok || !data.success) {
+    const audioUrl =
+        API_URL + data.audioUrl;
 
-            alert(
-                data.message ||
-                "Speech generation failed."
-            );
 
-            return;
-        }
+    audioPlayer.src =
+        audioUrl;
 
-        const audioUrl =
-            API_URL + data.audioUrl;
+    audioPlayer.load();
 
-        audioPlayer.src = audioUrl;
 
-        audioPlayer.load();
+    downloadButton.disabled =
+        false;
 
-        downloadButton.disabled = false;
 
-        downloadButton.onclick = function () {
+    downloadButton.onclick =
+        function () {
 
             const link =
                 document.createElement("a");
 
-            link.href = audioUrl;
+            link.href =
+                audioUrl;
 
-            link.download = "speech.mp3";
+            link.download =
+                "speech.mp3";
 
-            document.body.appendChild(link);
+            document.body.appendChild(
+                link
+            );
 
             link.click();
 
-            document.body.removeChild(link);
+            document.body.removeChild(
+                link
+            );
         };
 
-        try {
 
-            await audioPlayer.play();
+    try {
 
-        } catch (error) {
-
-            console.log(
-                "Autoplay blocked:",
-                error.message
-            );
-        }
+        await audioPlayer.play();
 
     } catch (error) {
 
-        console.log("TTS error:", error);
-
-        alert(
-            "Failed to connect to server. Make sure the server is running."
+        console.log(
+            "Autoplay blocked:",
+            error.message
         );
-
-    } finally {
-
-        generateButton.disabled = false;
-        generateButton.textContent = "Generate Speech";
     }
+
+
+    await loadHistory();
+
+
+} catch (error) {
+
+    console.log(
+        "TTS error:",
+        error
+    );
+
+    alert(
+        "Failed to connect to server."
+    );
+
+} finally {
+
+    generateButton.disabled =
+        false;
+
+    generateButton.textContent =
+        "Generate Speech";
 }
 
 
+}
+
 generateButton.addEventListener(
-    "click",
-    generateSpeech
+"click",
+generateSpeech
 );
 
-
 loadVoices();
-
+loadHistory();
